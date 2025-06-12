@@ -1,0 +1,14 @@
+{
+    "type": "code",
+    "modid": "itempickuphighlighter",
+    "name": "Item Pickup Highlighter",
+    "authors": [
+        "tacf"
+    ],
+    "side": "client",
+    "description": "Client Side mod that allows you to spawn particles on items on the ground in a radius around player",
+    "version": "1.0.0",
+    "dependencies": {
+        "game": "1.20"
+    }
+}
