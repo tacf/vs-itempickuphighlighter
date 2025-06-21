@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.Client;
+﻿using System;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -26,7 +27,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
             _highlightRange);
         foreach (var ent in et)
         {
-            if (ent is EntityItem)
+            if (ent is EntityItem ||  ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
             {
                 _capi.World.SpawnParticles(new SimpleParticleProperties()
                 {
