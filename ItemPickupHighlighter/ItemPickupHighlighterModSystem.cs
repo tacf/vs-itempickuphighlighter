@@ -9,8 +9,43 @@ public class ItemPickupHighlighterModSystem : ModSystem
 {
     private ICoreClientAPI _capi;
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Client;
-    private readonly int _highlightRange = 10;
-    private bool _highlightToggled;
+    public static string ConfigFileName = "ItemPickupHighlighter.json";
+    public static string ModId = "ItemPickupHighlighter";
+
+    public override void Start(ICoreAPI api)
+    {
+        api.World.Logger.Event("started '" + ModId + "'");   
+    }
+
+        public override void StartPre(ICoreAPI api)
+    {
+        switch (api.Side)
+        {
+            case EnumAppSide.Client:
+                try
+                {
+                    ModConfig file;
+                    if ((file = api.LoadModConfig<ModConfig>(ConfigFileName)) == null)
+                    {
+                        api.StoreModConfig<ModConfig>(ModConfig.Instance, ConfigFileName);
+                    }
+                    else
+                    {
+                        ModConfig.Instance = file;
+                    }
+                }
+                catch
+                {
+                    api.StoreModConfig<ModConfig>(ModConfig.Instance, ConfigFileName);
+                }  
+                break;
+        }
+
+        if (api.ModLoader.IsModEnabled("configlib"))
+        {
+            _ = new ConfigLibCompatibility(api);
+        }
+    }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
@@ -26,19 +61,20 @@ public class ItemPickupHighlighterModSystem : ModSystem
 
     private bool HighlightItemsToggle(KeyCombination hotkey)
     {
-        _highlightToggled = !_highlightToggled;
+        ModConfig.Instance.HighlightContinousMode = !ModConfig.Instance.HighlightContinousMode;
         var status = "<font weight=\"bold\" color=\"#84ff84\">Enabled</font>";
-        if (!_highlightToggled)
+        if (!ModConfig.Instance.HighlightContinousMode)
         {
             status = "<font weight=\"bold\" color=\"#ff8484\">Disabled</font>";
         }
         _capi.TriggerChatMessage("(ItemPickupHighlighter) Continuous Mode: " + status);
+        _capi.StoreModConfig<ModConfig>(ModConfig.Instance, ConfigFileName);
         return true;
     }
 
     private void OnGameTick(float obj)
     {
-        if (_highlightToggled)
+        if (ModConfig.Instance.HighlightContinousMode)
         {
             HighlightNearbyItems();
         }
@@ -46,7 +82,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
 
     private bool HighlightItems(KeyCombination hotkey)
     {
-        if (_highlightToggled) return false;
+        if (ModConfig.Instance.HighlightContinousMode) return false;
         HighlightNearbyItems();
         return true;
     }
@@ -54,8 +90,8 @@ public class ItemPickupHighlighterModSystem : ModSystem
     private void HighlightNearbyItems()
     {
         var et = _capi.World.Player.Entity.Api.World.GetEntitiesAround(_capi.World.Player.Entity.SidedPos.XYZ,
-            _highlightRange,
-            _highlightRange);
+            ModConfig.Instance.HighlightDistance,
+            ModConfig.Instance.HighlightDistance);
         foreach (var ent in et)
         {
             if (ent is EntityItem ||  ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
@@ -63,7 +99,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
                 _capi.World.SpawnParticles(new SimpleParticleProperties()
                 {
                     MinPos = ent.SidedPos.XYZ,
-                    Color = ColorUtil.WhiteArgb,
+                    Color = ModConfig.Instance.HighlightColor,
                     MinSize = 0.1f,
                     MaxSize = 0.1f,
                     MinVelocity = new Vec3f(-0.1f, 0.5f, -0.1f),

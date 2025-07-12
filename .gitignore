@@ -13,6 +13,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.dll
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -674,3 +675,4 @@ fabric.properties
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/csharp,visualstudio,visualstudiocode,rider
+.cursorrules
