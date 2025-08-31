@@ -7,8 +7,10 @@
     ],
     "side": "client",
     "description": "Client Side mod that allows you to spawn particles on items on the ground in a radius around player",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "dependencies": {
-        "game": "1.21.0-rc.1"
+        "game": "1.21.0",
+        "configlib": "1.10.1",
+        "vsimgui": "1.1.12"
     }
 }

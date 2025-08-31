@@ -42,7 +42,7 @@ public class ConfigLibCompatibility
                 config.HighlightDistance = highlightDistance;
             }
             ImGui.PopItemWidth();
-            ImGui.TextDisabled("How far away items can be highlighted.");
+            TextPropertyDescription("How far away items can be highlighted.");
 
             ImGui.Separator();
 
@@ -52,7 +52,15 @@ public class ConfigLibCompatibility
             {
                 config.HighlightContinousMode = continuousMode;
             }
-            ImGui.TextDisabled("If enabled, items are highlighted continuously without pressing the hotkey.");
+            TextPropertyDescription("If enabled, items are highlighted continuously without pressing the hotkey.");
+
+            // Show Item Names
+            var showItemNames = config.ShowItemNames;
+            if (ImGui.Checkbox("Display Item Names (when Sneaking)", ref showItemNames))
+            {
+                config.ShowItemNames = showItemNames;
+            }
+            TextPropertyDescription("If enabled, items are highlighted continuously without pressing the hotkey.");
 
             ImGui.Unindent();
         }
@@ -72,5 +80,12 @@ public class ConfigLibCompatibility
             ImGui.PopItemWidth();
             ImGui.TextDisabled("The color of the highlight.");
         }
+    }
+    
+    private void TextPropertyDescription(string text)
+    {
+        ImGui.BeginDisabled();
+        ImGui.TextWrapped(text);
+        ImGui.EndDisabled();
     }
 } 

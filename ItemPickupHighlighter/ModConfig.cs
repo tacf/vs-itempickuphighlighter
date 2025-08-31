@@ -5,7 +5,7 @@ namespace ItemPickupHighlighter
     class ModConfig
     {
         public static ModConfig Instance { get; set; } = new ModConfig();
-
+        
         /// <summary>
         /// Highlight distance.
         /// </summary>
@@ -15,11 +15,18 @@ namespace ItemPickupHighlighter
         /// <summary>
         /// Highlight Continous Mode.
         /// </summary>
-        public bool HighlightContinousMode { get; set; } = false;
+        private bool _continousMode = false;
+        public bool HighlightContinousMode { get { return _continousMode; } set { _continousMode = value; } }
 
         /// <summary>
         /// Highlight Color.
         /// </summary>
         public int HighlightColor { get; set; } = ColorUtil.WhiteArgb;
+
+        /// <summary>
+        /// Enabled/Disable Feature
+        /// </summary>
+        private bool _showItemNames = false;
+        public bool ShowItemNames { get { return _showItemNames; } set { _showItemNames = value; } }
     }
 }
