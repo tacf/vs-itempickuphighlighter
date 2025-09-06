@@ -94,7 +94,8 @@ public class ItemPickupHighlighterModSystem : ModSystem
     {
         var et = _capi.World.GetEntitiesAround(_capi.World.Player.Entity.SidedPos.XYZ,
             ModConfig.Instance.HighlightDistance,
-            ModConfig.Instance.HighlightDistance);
+            ModConfig.Instance.HighlightDistance,
+            ent => (ent is EntityItem && ModConfig.Instance.HighlightItems) || (ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase) && ModConfig.Instance.HighlightProjectiles));
 
         if ((!_capi.World.Player.Entity.Controls.Sneak && (_entitiesNametags.Count > 0)) || !ModConfig.Instance.ShowItemNames)
         {
@@ -119,57 +120,55 @@ public class ItemPickupHighlighterModSystem : ModSystem
         {
             // TODO: Change logic to share the Behavior Entity object between all entities
             // Behavior Entity should keep a list of the associated entities
-            if (ent is EntityItem || ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
+            
+            // Entity isn't already associated with a nametag
+            // Entity is on the ground (has collided vertically)
+            // Player is holding shift
+            // We exclude projectiles from nametags for now (this needs to be worked -- code is a mess)
+            if (!_entitiesNametags.Contains(ent) 
+                && ent.CollidedVertically 
+                && _capi.World.Player.Entity.Controls.Sneak
+                && (!ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
+                && ModConfig.Instance.ShowItemNames)
             {
-                // Entity isn't already associated with a nametag
-                // Entity is on the ground (has collided vertically)
-                // Player is holding shift
-                // We exclude projectiles from nametags for now (this needs to be worked -- code is a mess)
-                if (!_entitiesNametags.Contains(ent) 
-                    && ent.CollidedVertically 
-                    && _capi.World.Player.Entity.Controls.Sneak
-                    && (!ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
-                    && ModConfig.Instance.ShowItemNames)
+                // Find any close similar entities and aggregate nametag display
+                // (prevents displaying several overlapping nametags when dropping a full stacks -- game seems to split into itemstacks of 4 items)
+                var nearbySimilarItems = _capi.World.GetEntitiesAround(ent.SidedPos.XYZ, 2, 2, 
+                    e => (e is EntityItem item) 
+                        && item.Itemstack.Id == (ent as EntityItem)?.Itemstack.Id 
+                        && item.HasBehavior<EntityItemBehaviorNameTag>() 
+                        && !item.GetBehavior<EntityItemBehaviorNameTag>()!.HasParentBehavior());
+                var nearbyParentBehavior = nearbySimilarItems.Length > 0 ? nearbySimilarItems[0].GetBehavior<EntityItemBehaviorNameTag>() : null;
+                    // No similar entities nearby, generate new nametag
+                if (_entitiesNametags.Add(ent) && ent.GetBehavior<EntityItemBehaviorNameTag>() == null)
                 {
-                    // Find any close similar entities and aggregate nametag display
-                    // (prevents displaying several overlapping nametags when dropping a full stacks -- game seems to split into itemstacks of 4 items)
-                    var nearbySimilarItems = _capi.World.GetEntitiesAround(ent.SidedPos.XYZ, 2, 2, 
-                        e => (e is EntityItem item) 
-                            && item.Itemstack.Id == (ent as EntityItem)?.Itemstack.Id 
-                            && item.HasBehavior<EntityItemBehaviorNameTag>() 
-                            && !item.GetBehavior<EntityItemBehaviorNameTag>()!.HasParentBehavior());
-                    var nearbyParentBehavior = nearbySimilarItems.Length > 0 ? nearbySimilarItems[0].GetBehavior<EntityItemBehaviorNameTag>() : null;
-                        // No similar entities nearby, generate new nametag
-                    if (_entitiesNametags.Add(ent) && ent.GetBehavior<EntityItemBehaviorNameTag>() == null)
-                    {
 
-                        var eb = new EntityItemBehaviorNameTag(ent as EntityItem);
-                        if (nearbyParentBehavior != null)
-                        {
-                            nearbyParentBehavior.AggregateNearby(((EntityItem)ent).Itemstack.StackSize);
-                            eb.SetParentBehavior(ref nearbyParentBehavior);
-                        }
-                        ent.AddBehavior(eb);
+                    var eb = new EntityItemBehaviorNameTag(ent as EntityItem);
+                    if (nearbyParentBehavior != null)
+                    {
+                        nearbyParentBehavior.AggregateNearby(((EntityItem)ent).Itemstack.StackSize);
+                        eb.SetParentBehavior(ref nearbyParentBehavior);
                     }
+                    ent.AddBehavior(eb);
+                }
 
-                }
-                if (ModConfig.Instance.HighlightContinousMode)
+            }
+            if (ModConfig.Instance.HighlightContinousMode)
+            {
+                // TODO: We can probably move this into the behavior entity and also share among nearby?!
+                _capi.World.SpawnParticles(new SimpleParticleProperties()
                 {
-                    // TODO: We can probably move this into the behavior entity and also share among nearby?!
-                    _capi.World.SpawnParticles(new SimpleParticleProperties()
-                    {
-                        MinPos = ent.SidedPos.XYZ,
-                        Color = ModConfig.Instance.HighlightColor,
-                        MinSize = 0.1f,
-                        MaxSize = 0.1f,
-                        MinVelocity = new Vec3f(-0.1f, 0.5f, -0.1f),
-                        AddVelocity = new Vec3f(0.1f, 1.5f, 0.1f),
-                        MinQuantity = 0.7f,
-                        LifeLength = 1,
-                        WithTerrainCollision = false,
-                        LightEmission = ColorUtil.WhiteArgb
-                    });
-                }
+                    MinPos = ent.SidedPos.XYZ,
+                    Color = ModConfig.Instance.HighlightColor,
+                    MinSize = 0.1f,
+                    MaxSize = 0.1f,
+                    MinVelocity = new Vec3f(-0.1f, 0.5f, -0.1f),
+                    AddVelocity = new Vec3f(0.1f, 1.5f, 0.1f),
+                    MinQuantity = 0.7f,
+                    LifeLength = 1,
+                    WithTerrainCollision = false,
+                    LightEmission = ColorUtil.WhiteArgb
+                });
             }
         }
     }

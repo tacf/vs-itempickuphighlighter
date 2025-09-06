@@ -32,7 +32,24 @@ public class ConfigLibCompatibility
         if (ImGui.CollapsingHeader("Highlighter Behavior"))
         {
             ImGui.Indent();
+            
+            ImGui.Separator();
 
+            // Higlighted Entities
+            ImGui.TextWrapped("Entities to Highlight");
+            var highlightItems = config.HighlightItems;
+            if (ImGui.Checkbox("Items", ref highlightItems))
+            {
+                config.HighlightItems = highlightItems;
+            }
+            var highlightProjectiles = config.HighlightProjectiles;
+            if (ImGui.Checkbox("Projectiles", ref highlightProjectiles))
+            {
+                config.HighlightProjectiles = highlightProjectiles;
+            }
+            
+            ImGui.Separator();
+            
             // Highlight Distance
             ImGui.Text("Highlight distance (blocks).");
             ImGui.PushItemWidth(200);
@@ -45,6 +62,7 @@ public class ConfigLibCompatibility
             TextPropertyDescription("How far away items can be highlighted.");
 
             ImGui.Separator();
+            
 
             // Continuous Mode
             var continuousMode = config.HighlightContinousMode;
@@ -56,7 +74,7 @@ public class ConfigLibCompatibility
 
             // Show Item Names
             var showItemNames = config.ShowItemNames;
-            if (ImGui.Checkbox("Display Item Names (when Sneaking)", ref showItemNames))
+            if (ImGui.Checkbox("Display Item Names (when Sneaking) -- Projectiles are not supported.", ref showItemNames))
             {
                 config.ShowItemNames = showItemNames;
             }
