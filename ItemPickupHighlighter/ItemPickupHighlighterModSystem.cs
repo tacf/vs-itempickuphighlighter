@@ -96,7 +96,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
             ModConfig.Instance.HighlightDistance,
             ModConfig.Instance.HighlightDistance);
 
-        if (!_capi.World.Player.Entity.Controls.Sneak && (_entitiesNametags.Count > 0))
+        if ((!_capi.World.Player.Entity.Controls.Sneak && (_entitiesNametags.Count > 0)) || !ModConfig.Instance.ShowItemNames)
         {
             foreach (var en in _entitiesNametags)
             {
@@ -128,15 +128,16 @@ public class ItemPickupHighlighterModSystem : ModSystem
                 if (!_entitiesNametags.Contains(ent) 
                     && ent.CollidedVertically 
                     && _capi.World.Player.Entity.Controls.Sneak
-                    && !ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
+                    && (!ent.Class.Contains("projectile", StringComparison.OrdinalIgnoreCase))
+                    && ModConfig.Instance.ShowItemNames)
                 {
                     // Find any close similar entities and aggregate nametag display
                     // (prevents displaying several overlapping nametags when dropping a full stacks -- game seems to split into itemstacks of 4 items)
                     var nearbySimilarItems = _capi.World.GetEntitiesAround(ent.SidedPos.XYZ, 2, 2, 
-                        e => (e is EntityItem) 
-                            && (e as EntityItem).Itemstack.Id == (ent as EntityItem)?.Itemstack.Id 
-                            && e.HasBehavior<EntityItemBehaviorNameTag>() 
-                            && !e.GetBehavior<EntityItemBehaviorNameTag>().HasParentBehavior());
+                        e => (e is EntityItem item) 
+                            && item.Itemstack.Id == (ent as EntityItem)?.Itemstack.Id 
+                            && item.HasBehavior<EntityItemBehaviorNameTag>() 
+                            && !item.GetBehavior<EntityItemBehaviorNameTag>()!.HasParentBehavior());
                     var nearbyParentBehavior = nearbySimilarItems.Length > 0 ? nearbySimilarItems[0].GetBehavior<EntityItemBehaviorNameTag>() : null;
                         // No similar entities nearby, generate new nametag
                     if (_entitiesNametags.Add(ent) && ent.GetBehavior<EntityItemBehaviorNameTag>() == null)
@@ -145,7 +146,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
                         var eb = new EntityItemBehaviorNameTag(ent as EntityItem);
                         if (nearbyParentBehavior != null)
                         {
-                            nearbyParentBehavior.AggregateNearby((ent as EntityItem).Itemstack.StackSize);
+                            nearbyParentBehavior.AggregateNearby(((EntityItem)ent).Itemstack.StackSize);
                             eb.SetParentBehavior(ref nearbyParentBehavior);
                         }
                         ent.AddBehavior(eb);

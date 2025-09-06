@@ -153,6 +153,7 @@ namespace ItemPickupHighlighter.Behaviors
 
             var bgColor = GuiStyle.DialogLightBgColor;
             bgColor[3] = 0.25; // Reduce alpha channel of default color
+            nameTagTexture?.Dispose();
             nameTagTexture = capi.Gui.TextTexture.GenUnscaledTextTexture(
                 displayName,
                 CairoFont.WhiteMediumText().WithColor(ColorUtil.WhiteArgbDouble),
