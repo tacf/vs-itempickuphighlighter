@@ -86,11 +86,11 @@ public class ItemPickupHighlighterModSystem : ModSystem
     private bool HighlightItems(KeyCombination hotkey)
     {
         if (ModConfig.Instance.HighlightContinousMode) return false;
-        HighlightNearbyItems();
+        HighlightNearbyItems(true);
         return true;
     }
 
-    private void HighlightNearbyItems()
+    private void HighlightNearbyItems(bool isPlayerTriggering = false)
     {
         var et = _capi.World.GetEntitiesAround(_capi.World.Player.Entity.SidedPos.XYZ,
             ModConfig.Instance.HighlightDistance,
@@ -153,7 +153,7 @@ public class ItemPickupHighlighterModSystem : ModSystem
                 }
 
             }
-            if (ModConfig.Instance.HighlightContinousMode)
+            if (ModConfig.Instance.HighlightContinousMode || isPlayerTriggering)
             {
                 // TODO: We can probably move this into the behavior entity and also share among nearby?!
                 _capi.World.SpawnParticles(new SimpleParticleProperties()
